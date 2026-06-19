@@ -27,35 +27,88 @@ exports.generateTrip = async (req, res) => {
   const userId = req.user.id; // Populated from authentication middleware securely
 
   const prompt = `
-    Create a detailed travel plan for a ${durationDays}-day trip to ${destination}.
-    Budget preference is ${budgetTier}. Interests are: ${interests.join(", ")}.
+Generate a travel plan for a ${durationDays}-day trip to ${destination}.
 
-    You must output ONLY a valid JSON object matching this structure:
+Budget Tier: ${budgetTier}
+Interests: ${interests.join(", ")}
+
+IMPORTANT RULES:
+
+1. Return ONLY valid JSON.
+2. Do NOT wrap the JSON in markdown.
+3. Do NOT include explanations.
+4. Do NOT include text before or after the JSON.
+
+Allowed values:
+
+timeOfDay:
+- Morning
+- Afternoon
+- Evening
+- Night
+
+packingList.category:
+- Documents
+- Clothing
+- Gear
+- Other
+
+The response MUST match this schema exactly:
+
+{
+  "itinerary": [
     {
-      "itinerary": [
+      "dayNumber": 1,
+      "activities": [
         {
-          "dayNumber": 1,
-          "activities": [
-            { "title": "Activity name", "description": "Brief text details", "estimatedCostUSD": 20, "timeOfDay": "Morning" }
-          ]
+          "title": "Activity name",
+          "description": "Brief description",
+          "estimatedCostUSD": 20,
+          "timeOfDay": "Morning"
         }
-      ],
-      "hotels": [
-        { "name": "Recommended Hotel", "tier": "Budget", "estimatedCostNightUSD": 85, "rating": "4.5/5" }
-      ],
-      "estimatedBudget": {
-        "transport": 120,
-        "accommodation": 300,
-        "food": 150,
-        "activities": 100,
-        "total": 670
-      },
-      "packingList": [
-        { "item": "Passport", "category": "Documents", "isPacked": false }
       ]
     }
-    Make sure estimates match typical realistic local rates for the specified budgetTier.
-  `;
+  ],
+  "hotels": [
+    {
+      "name": "Hotel Name",
+      "tier": "Budget",
+      "estimatedCostNightUSD": 80,
+      "rating": "4.5/5"
+    }
+  ],
+  "estimatedBudget": {
+    "transport": 100,
+    "accommodation": 300,
+    "food": 150,
+    "activities": 100,
+    "total": 650
+  },
+  "packingList": [
+    {
+      "item": "Passport",
+      "category": "Documents",
+      "isPacked": false
+    }
+  ]
+}
+
+VALIDATION REQUIREMENTS:
+
+- Every activity.timeOfDay MUST be one of:
+  Morning, Afternoon, Evening, Night
+
+- Every packingList.category MUST be one of:
+  Documents, Clothing, Gear, Other
+
+- Never use values such as:
+  Apparel, Footwear, Accessories, Electronics,
+  Toiletries & Health, Essentials, Financial
+
+- Budget numbers must be realistic.
+
+Return only the JSON object.
+`;
 
   try {
     const apiKey = process.env.GEMINI_API_KEY;
