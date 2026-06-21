@@ -21,7 +21,7 @@ router.get("/:id", authMiddleware, getTripById);
 
 router.delete("/:id", authMiddleware, deleteTrip);
 
-router.post("/:tripId/days/:dayIndex/activities", authMiddleware, addActivity);
+router.post("/:tripId/days/:dayNumber/activities", authMiddleware, addActivity);
 
 router.delete(
   "/:tripId/days/:dayNumber/activities/:activityId",

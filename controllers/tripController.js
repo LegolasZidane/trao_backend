@@ -212,7 +212,7 @@ exports.deleteTrip = async (req, res) => {
 
 exports.addActivity = async (req, res) => {
   try {
-    const { tripId, dayIndex } = req.params;
+    const { tripId, dayNumber } = req.params;
 
     const { title, description, estimatedCostUSD, timeOfDay } = req.body;
 
@@ -227,7 +227,7 @@ exports.addActivity = async (req, res) => {
       });
     }
 
-    const day = trip.itinerary.find((d) => d.dayNumber === Number(dayIndex));
+    const day = trip.itinerary.find((d) => d.dayNumber === Number(dayNumber));
 
     if (!day) {
       return res.status(404).json({
