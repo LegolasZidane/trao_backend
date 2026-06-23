@@ -32,6 +32,11 @@ Generate a travel plan for a ${durationDays}-day trip to ${destination}.
 Budget Tier: ${budgetTier}
 Interests: ${interests.join(", ")}
 
+The budget tier will always be one of:
+- Low
+- Medium
+- High
+
 IMPORTANT RULES:
 
 1. Return ONLY valid JSON.
@@ -72,7 +77,7 @@ The response MUST match this schema exactly:
   "hotels": [
     {
       "name": "Hotel Name",
-      "tier": "Budget",
+      "tier": "Low",
       "estimatedCostNightUSD": 80,
       "rating": "4.5/5"
     }
@@ -105,7 +110,8 @@ VALIDATION REQUIREMENTS:
   Apparel, Footwear, Accessories, Electronics,
   Toiletries & Health, Essentials, Financial
 
-- Budget numbers must be realistic.
+- Every hotel.tier MUST be one of:
+  Low, Medium, High.
 
 Return only the JSON object.
 `;
@@ -191,9 +197,13 @@ exports.getTripById = async (req, res) => {
 
 exports.deleteTrip = async (req, res) => {
   try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Trip ID required" });
+    }
+    const userId = req.user.id || req.user._id;
     const trip = await Trip.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user.id,
+      userId,
     });
 
     if (!trip) {
@@ -204,6 +214,7 @@ exports.deleteTrip = async (req, res) => {
 
     res.json({
       message: "Trip deleted successfully",
+      deletedTripId: trip._id,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -402,8 +413,7 @@ VALIDATION REQUIREMENTS:
       body: JSON.stringify(requestPayload),
     });
 
-    const parsedResponseText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const parsedResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!parsedResponseText) {
       throw new Error("Could not extract generation data from response.");
@@ -426,4 +436,16 @@ VALIDATION REQUIREMENTS:
       message: "Failed to regenerate day.",
     });
   }
+};
+
+exports.changePackingStatus = async (req, res) => {
+  const trip = await Trip.findById(req.params.tripId);
+
+  const item = trip.packingList.id(req.params.itemId);
+
+  item.isPacked = !item.isPacked;
+
+  await trip.save();
+
+  res.json(trip);
 };
