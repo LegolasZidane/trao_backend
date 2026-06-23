@@ -70,7 +70,7 @@ const loginUser = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
-        message: "Invalid credentials",
+        message: "User does not exist. Please register.",
       });
     }
 
